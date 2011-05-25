@@ -67,8 +67,6 @@ var QueQue = (function() {
 		'stop',
 		'complete',
 		'add',
-		'remove',
-		'clear',
 		'exception'
 	];
 	
@@ -94,58 +92,53 @@ var QueQue = (function() {
 			return this;
 		},
 		/**
-		 * @param {Function} fn
-		 * @param {Number} limit
-		 */
-		remove: function(fn, limit) {
-            var tasks = this._tasks;
-
-            //tasks.splice(tasks.indexOf(fn), 1);
-
-            return this;
-		},
-		/**
 		 * @param {Object} lastResult
+		 * @param {Object} error
 		 * @return {QueQue}
 		 */
-		step: function(lastResult) {
+		step: function(lastResult, error) {
 			var 
 					self = this, 
 					step, 
-					proxy = {};		
+					proxy;		
 			
 			if(!this._running) {
 				return this;
 			}
 
 			if(!this._tasks.length) {
-				this.trigger('complete');
 				return this.end();
 			}			
 
 			step = this._tasks.shift();
 			
-			proxy.qq = this;
-			proxy.memo = lastResult;
+			proxy = {
+				qq: this,
+				memo: lastResult,
+				error: error
+			}
 
 			if(step.async) {
-				proxy.end = function(data) {
-					return self.step(data);
+				proxy.ready = function(data, error) {
+					return self.step(data, error);
 				}
 			}
 			
 			try {
-				proxy.memo = step.fn.call(step.scope || this, proxy);
+				lastResult = step.fn.call(step.scope || this, proxy);
 			} catch(e) {
 				if(step.onException) {
-					step.onException.call(this, e, this);
-				} else {
-					throw e;
+					step.onException.call(this, e);
+				} else {				
+					if(this._handlers['exception'] && this._handlers['exception'].lenght) {
+						this.trigger('exception', [e]);					
+					}
+					error = e;
 				}
 			}
 			
 			if(!step.async) {
-				this.step(proxy.memo);		
+				this.step(lastResult, e);		
 			}
 			
 			return this;
@@ -226,78 +219,3 @@ var QueQue = (function() {
 	
 	return QueQue;
 })();
-//-----------------------------------------------------------------------------------------------------------------
-
-// Pipeline
-var q = new QueQue;
-
-//q.onStepComplete(alert);
-/*
-q
-
-.add(function(proxy) {
-	var value = {};
-	
-	value['s1'] = true;
-	console.log('s1 ready');
-	return value;
-})
-
-.add(function(proxy) {
-	var value = proxy.memo;
-	
-	value['s2'] = true;
-	console.log('s2 ready');
-	
-	return value;
-})
-
-.add(function(proxy) {
-	var value = proxy.memo;
-	
-	value['s3'] = true;
-	
-	setTimeout(function() {
-		console.log('s3 ready');
-		proxy.end(value);	
-	}, 1500);	
-	
-}, { async: true })
-
-.add(function(proxy) {
-	var value = proxy.memo;
-	
-	value['s4'] = true;
-	
-	console.log(value);
-	
-	return value;	
-})
-
-.start();
-*/
-//-----------------------------------------------------------------------------------------------------------------
-// Events
-
-
-
-var qq = QueQue()
-	.onComplete(function() {
-		console.log('Complete I');
-	})
-	.on('complete', function() {
-		console.log('Complete II');
-	})
-	.add(function(proxy) {
-		setTimeout(function() {
-			console.log('Ready 1');
-			proxy.end();
-		},1500);
-	}, { async: true})
-	.add(function(proxy) {
-		setTimeout(function() {
-			console.log('Ready 2');
-			proxy.end();
-		},1500);
-	}, { async: true})
-	.start();
