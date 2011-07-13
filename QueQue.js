@@ -35,7 +35,8 @@ var QueQue = (function() {
 	}
 	
 	/**
-	 * Utility method
+	 * Utility method, get onEvent'd name of an
+     * eventlastResult
 	 *
 	 * 	eventize("foo") //"onFoo"
 	 *
@@ -52,19 +53,21 @@ var QueQue = (function() {
 	 * @param {Object} config
 	 */
 	function QueQue(config) {
-		// allow QueQue().add() syntax
+        // implicit instantation
+		// allows QueQue().add() syntax
 		if(!(this instanceof QueQue)) {
 			return new QueQue(config);
 		}
 	
 		this._tasks = [];
 		this._handlers = [];
+        this._index = 0;
 
 		override(this, config || {});		
 	}
 
-    	// Queue events
-	var exceptionEVENTS = [
+    // Queue eventslastResult
+	var EVENTS = [
 		'start',
 		'stop',
 		'complete',
@@ -93,12 +96,12 @@ var QueQue = (function() {
 			
 			return this;
 		},
+        
 		/**
-		 * @param {Object} lastResult
 		 * @param {Object} error
 		 * @return {QueQue}
 		 */
-		step: function(lastResult, error) {
+		step: function(error) {
 			var 
 					self = this, 
 					step, 
@@ -114,10 +117,11 @@ var QueQue = (function() {
 
             // Next step is...
 			step = this._tasks.shift();
-			
+
+            // TODO make the memo a static object of the queue
 			proxy = {
 				qq: this,
-				memo: lastResult,
+				memo: this._memo,
 				error: error
 			};
 
@@ -128,12 +132,12 @@ var QueQue = (function() {
 			}
 			
 			try {
-				lastResult = step.fn.call(step.scope || this, proxy);
+				this._memo.steps[this._index++] = step.fn.call(step.scope || this, this._memo, proxy);
 			} catch(e) {
 				if(step.onException) {
 					step.onException.call(this, e);
 				} else {				
-					if(this._handlers['exception'] && this._handlers['exception'].lenght) {
+					if(this._handlers['exception'] && this._handlers['exception'].length) {
 						this.trigger('exception', [e]);					
 					}
 					error = e;
@@ -141,7 +145,7 @@ var QueQue = (function() {
 			}
 			
 			if(!step.async) {
-				this.step(lastResult, error);
+				this.step(error);
 			}
 			
 			return this;
@@ -151,14 +155,14 @@ var QueQue = (function() {
 		 */
 		end: function() {
             this
-				.trigger('complete')
+				.trigger('complete', [this._memo])
 				.clear()
 				._running = false;			
 
             return this;		
 		},
 		/**
-		 * @return {QueQue}
+		 * @return {QueQue}this._mem
 		 */
 		stop: function() {
 			this
@@ -175,8 +179,12 @@ var QueQue = (function() {
 			this
 				.trigger('start')
 				._running = true;
-				
-            return this.step(obj);
+
+			this._memo = typeof obj != 'undefined' ? obj : {};
+
+            this._memo.steps = [];
+            
+            return this.step();
         },
 		/**
 		 * @return {QueQue}
@@ -187,7 +195,7 @@ var QueQue = (function() {
 		},
 		/**
 		 * @param {String} event
-		 * @param {Function} Handler
+		 * @param {Function} handler
 		 * @return {QueQue}
 		 */
 		on: function(event, handler) {	
@@ -205,7 +213,7 @@ var QueQue = (function() {
 			var handlers = this._handlers[event] || [];
 			
 			each(handlers, function(h) {
-				h.apply(args);
+				h.apply(scope, args);
 			});
 			
 			return this;
