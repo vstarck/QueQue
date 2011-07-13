@@ -1,6 +1,6 @@
 /**
  * @author Valentin Starck (@aijoona)
- * @see
+ * @see http://blog.aijoona.com/2011/05/25/queque-colas-de-ejecucion/
  * 
  * QueQue is freely distributable under the terms of an MIT-style license.
  ********************************************************************************/
@@ -59,10 +59,12 @@ var QueQue = (function() {
 	
 		this._tasks = [];
 		this._handlers = [];
+
 		override(this, config || {});		
 	}
-	
-	var EVENTS = [
+
+    	// Queue events
+	var exceptionEVENTS = [
 		'start',
 		'stop',
 		'complete',
@@ -77,7 +79,7 @@ var QueQue = (function() {
 		 */
 		add: function(fn, opts) {	
 			var step = override({
-				async: false,
+				async: true,
 				scope: this,
 				fn: fn
 			}, opts || {});
@@ -108,15 +110,16 @@ var QueQue = (function() {
 
 			if(!this._tasks.length) {
 				return this.end();
-			}			
+			}
 
+            // Next step is...
 			step = this._tasks.shift();
 			
 			proxy = {
 				qq: this,
 				memo: lastResult,
 				error: error
-			}
+			};
 
 			if(step.async) {
 				proxy.ready = function(data, error) {
@@ -138,7 +141,7 @@ var QueQue = (function() {
 			}
 			
 			if(!step.async) {
-				this.step(lastResult, e);		
+				this.step(lastResult, error);
 			}
 			
 			return this;
