@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>QueQue :: batch</title>
+		<script type="text/javascript" src="../QueQue.js"></script>
+	</head>
+	<body>
+        <h1>QueQue :: batch</h1>
+        <p>Simple non blocking batch: sum [0..1e7] (~10secs)</p>
+        <div id="res">Processing...</div>
+        <h2>Code</h2>
+        <pre style="padding: 10px; border:  solid 1px #333">
+QueQue.batch(function(memo, curr, max) {
+    if (curr == max) QueQue.end();
+    return [memo + curr, curr + 1, max];
+}, {
+    args: [0, 1e7],
+    cb: function(total) {
+        document.getElementById('res').innerHTML = 'Sum: ' + total;
+    }
+});
+        </pre>
+	</body>
+	<script type="text/javascript">
+        var begin = +new Date;
+        
+        QueQue.batch(function(memo, curr, max) {
+            if (curr == max) QueQue.end();
+            return [memo + curr, curr + 1, max];
+        }, {
+            args: [0, 1e7],
+            cb: function(total) {
+				document.getElementById('res').innerHTML = 'Sum: ' + total + ' (' + (+new Date-begin)/1000 + 's)';
+            }
+        });
+	</script>
+</html>
