@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>QueQue :: queue events</title>
+		<script type="text/javascript" src="../QueQue.js"></script>
+	</head>
+	<body>
+        <h1>QueQue :: queue events</h1>
+        <p>Simple events attach to a queue</p>
+        <div id="res">Processing...</div>
+        <h2>Code</h2>
+    <pre style="padding: 10px; border:  solid 1px #333">
+// Events
+QueQue()
+    .onComplete(function() {
+        document.getElementById('res').innerHTML = 'onComplete triggered!';
+    })
+    .add(function(proxy) {
+        setTimeout(proxy.ready, proxy.memo);
+    }, { async: true})
+    .start(Math.random() * 10000);
+    </pre>
+	</body>
+	<script type="text/javascript">
+		// Events
+		QueQue()
+			.onComplete(function() {
+				document.getElementById('res').innerHTML = 'onComplete triggered!';
+			})
+			.add(function(proxy) {
+				setTimeout(proxy.ready, proxy.memo);
+			}, { async: true})
+			.start(Math.random() * 10000);
+
+	</script>
+</html>

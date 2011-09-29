@@ -62,7 +62,7 @@ var QueQue = (function() {
 		this._tasks = [];
 		this._handlers = [];
         this._index = 0;
-
+        
 		override(this, config || {});		
 	}
 
@@ -82,11 +82,10 @@ var QueQue = (function() {
 		 */
 		add: function(fn, opts) {	
 			var step = override({
-				async: true,
+				async: false,
 				scope: this,
 				fn: fn
 			}, opts || {});
-			
 			
 			this.trigger('add', [step]);
 			
@@ -101,11 +100,11 @@ var QueQue = (function() {
 		 * @param {Object} error
 		 * @return {QueQue}
 		 */
-		step: function(error) {
+		step: function(error, lastValue) {
 			var 
 					self = this, 
 					step, 
-					proxy;		
+					proxy;
 			
 			if(!this._running) {
 				return this;
@@ -118,21 +117,19 @@ var QueQue = (function() {
             // Next step is...
 			step = this._tasks.shift();
 
-            // TODO make the memo a static object of the queue
+            // TODO make the memo a static object in the queue
 			proxy = {
 				qq: this,
-				memo: this._memo,
-				error: error
-			};
-
-			if(step.async) {
-				proxy.ready = function(data, error) {
-					return self.step(data, error);
+				memo: lastValue,
+                steps: this._memo.steps,
+				error: error,
+				ready: function(data, error) {
+					return self.step(error, data);
 				}
-			}
-			
+			};
+            
 			try {
-				this._memo.steps[this._index++] = step.fn.call(step.scope || this, this._memo, proxy);
+				this._memo.steps[this._index] = step.fn.call(step.scope || this, proxy);
 			} catch(e) {
 				if(step.onException) {
 					step.onException.call(this, e);
@@ -142,11 +139,14 @@ var QueQue = (function() {
 					}
 					error = e;
 				}
+                console && console.log(e);
 			}
-			
+
 			if(!step.async) {
-				this.step(error);
+				this.step(error, this._memo.steps[this._index]);
 			}
+
+            this._index++;
 			
 			return this;
 		},
@@ -172,7 +172,7 @@ var QueQue = (function() {
             return this;
         },
 		/**
-		 * @param {Object}obj
+		 * @param {Object} obj
 		 * @return {QueQue}
 		 */
 		start: function(obj) {
@@ -180,11 +180,11 @@ var QueQue = (function() {
 				.trigger('start')
 				._running = true;
 
-			this._memo = typeof obj != 'undefined' ? obj : {};
-
+			this._memo = {};
             this._memo.steps = [];
-            
-            return this.step();
+            this._memo.initialValue = obj || null;
+
+            return this.step(null, this._memo.initialValue);
         },
 		/**
 		 * @return {QueQue}

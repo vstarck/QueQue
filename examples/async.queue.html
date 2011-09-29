@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>QueQue :: async queue</title>
+		<script type="text/javascript" src="../QueQue.js"></script>
+	</head>
+	<body>
+        <h1>QueQue :: async queue</h1>
+        <p>Async queue with random delay, get a random number between 0.99 and 1 in the first step</p>
+        <div id="res">Processing...</div>
+        <h2>Code</h2>
+    <pre style="padding: 10px; border:  solid 1px #333">
+// Async queue
+QueQue()
+    .add(function(proxy) {
+        function rec() {
+            var value = Math.random();
+
+            // Minor chance of succed
+            if(value > 0.99) {
+                // We're ready!
+                return proxy.ready(value);
+            }
+            setTimeout(rec, 200);
+        }
+
+        rec();
+    }, { async: true})
+    .add(function(proxy) {
+        document.getElementById('res').innerHTML = 'Value: ' + proxy.memo;
+    })
+    .start();
+    </pre>
+	</body>
+	<script type="text/javascript">
+		// Async queue
+		QueQue()
+			.add(function(proxy) {
+				function rec() {
+					var value = Math.random();
+
+                    // Minor chance of succed
+					if(value > 0.99) {
+                        // We're ready!
+						return proxy.ready(value);
+					}
+					setTimeout(rec, 200);
+				}
+
+				rec();
+			}, { async: true})
+			.add(function(proxy) {
+				document.getElementById('res').innerHTML = 'Value: ' + proxy.memo;
+			})
+			.start();
+	</script>
+</html>

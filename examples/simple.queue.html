@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>QueQue :: simple queue</title>
+		<script type="text/javascript" src="../QueQue.js"></script>
+	</head>
+	<body>
+        <h1>QueQue :: simple queue</h1>
+        <p>Simple sync queue</p>
+        <div id="res"></div>
+        <h2>Code</h2>
+        <pre style="padding: 10px; border:  solid 1px #333">
+// Basic queue
+QueQue()
+    .add(function(proxy) {
+        return proxy.memo + ' mister';
+    })
+    .add(function(proxy) {
+        return proxy.memo + ' world';
+    })
+    .add(function(proxy) {
+        document.getElementById('res').innerHTML = proxy.memo + '!';
+    })
+    .start('Hello'); // Hello world!
+        </pre>
+	</body>
+	<script type="text/javascript">
+		// Basic queue
+		QueQue()
+			.add(function(proxy) {
+				return proxy.memo + ' mister';
+			})
+			.add(function(proxy) {
+				return proxy.memo + ' world';
+			})
+			.add(function(proxy) {
+				document.getElementById('res').innerHTML = proxy.memo + '!';
+			})
+			.start('Hello'); // Hello world!
+	</script>
+</html>
