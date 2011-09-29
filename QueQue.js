@@ -239,12 +239,14 @@ QueQue.end = function() {
 QueQue.batch = function(fn, opts) {
     opts = opts || {};
 
-    var args, cb, loop, timeout;
+    var args, cb, loop, timeout, step;
 
     args = opts.args || [];
     args.unshift(0);
 
-    cb = opts.cb || function() {
+    cb = opts.complete || function() {
+    };
+    step = opts.step || function() {
     };
 
     loop = opts.loop | 1e5;
@@ -259,10 +261,11 @@ QueQue.batch = function(fn, opts) {
                 args = fn.apply(null, args);
             }
         } catch(e) {
-            c = false
+            e == 'end' && (c = false);
         }
 
         if (c) {
+            step && step.apply(null, args);
             setTimeout(function() {
                 r(args);
             }, timeout);

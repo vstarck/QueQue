@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html>
 	<head>
-		<title>QueQue :: batch</title>
+		<title>QueQue :: sum batch</title>
 		<script type="text/javascript" src="../QueQue.js"></script>
 	</head>
 	<body>
         <h1>QueQue :: batch</h1>
-        <p>Simple non blocking batch: sum [0..1e7] (~10secs)</p>
+        <p>Simple non blocking batch: sum [0..1e7] (~10-12secs)</p>
         <div id="res">Processing...</div>
         <h2>Code</h2>
         <pre style="padding: 10px; border:  solid 1px #333">
@@ -29,7 +29,7 @@ QueQue.batch(function(memo, curr, max) {
             return [memo + curr, curr + 1, max];
         }, {
             args: [0, 1e7],
-            cb: function(total) {
+            complete: function(total) {
 				document.getElementById('res').innerHTML = 'Sum: ' + total + ' (' + (+new Date-begin)/1000 + 's)';
             }
         });
